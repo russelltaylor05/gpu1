@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -58,3 +59,6 @@ int main(){
   }
   
 }
+=======
+asdfasdfasdfhello world
+>>>>>>> 9738dc6b4631a6e19a4bca24707d121ae4ce4899
