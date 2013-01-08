@@ -2,7 +2,7 @@
 # General definitions
 
 CPP = gcc
-CPPFLAGS = -Wall -O3 -DLITTLE_ENDIAN -DTELL
+CPPFLAGS = -Wall -O3
 
 MAIN = main.o
 
@@ -13,6 +13,10 @@ main: $(MAIN)
 
 clean: 
 	rm main *.o
+
+test: clean main
+	@main
+
 
 %.o: %.c
 	$(CPP) $(CPPFLAGS) -c $< -o $@
