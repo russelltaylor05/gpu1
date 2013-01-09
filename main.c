@@ -73,6 +73,8 @@ char* mmap_read(const char * file_name)
   
   return mapped;
 }
+
+/*
 void buildtable (int **A, int **B, int **C, lenAx, len Ay, len Bx, len By)
 {//LenAx = LenBy
         int i, j, k, sum = 0;
@@ -89,6 +91,8 @@ void buildtable (int **A, int **B, int **C, lenAx, len Ay, len Bx, len By)
                 }
         }
 }
+*/
+
 int main ()
 {
 
