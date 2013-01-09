@@ -2,7 +2,7 @@
 # General definitions
 
 CPP = gcc
-CPPFLAGS = -Wall -O3
+CPPFLAGS = -Wall -O3 -g
 
 MAIN = main.o
 

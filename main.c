@@ -22,16 +22,33 @@ check (int test, const char * message, ...)
     }
 }
 
-const char * mmap_read_example(const char * file_name) 
+char* regular_read(const char * file_name) 
 {
+  size_t size;
+  char *buffer;
+  FILE *fp;
+  
+  fp = fopen(file_name,"r");
 
+  fseek (fp, 0, SEEK_END);
+  size = ftell(fp);
+  rewind (fp);
+  
+  buffer = (char*) malloc (sizeof(char)*size);
+  fread (buffer, 1, size, fp);
+
+  return buffer;
+}
+
+
+/* Does not work because returned string is not null terminated */
+char* mmap_read(const char * file_name) 
+{
   int fd;
   struct stat s;
   int status;
   size_t size;
-  const char * mapped;
-  int i;
-
+  char * mapped;
 
   /* Open the file for reading. */
   fd = open (file_name, O_RDONLY);
@@ -46,16 +63,13 @@ const char * mmap_read_example(const char * file_name)
   mapped = mmap (0, size, PROT_READ, MAP_SHARED, fd, 0);
   check (mapped == MAP_FAILED, "mmap %s failed: %s", file_name, strerror (errno));
   
-  
   /* Now do something with the information. */
   /*
   for (i = 0; i < size; i++) {
-      char c;
-      c = mapped[i];
-      putchar (c);
+      putchar (mapped[i]);
   }
   putchar('\n');
-  */
+  */  
   
   return mapped;
 }
@@ -64,19 +78,53 @@ int main ()
 {
 
   const char * file_name = "test.in";
-  const char * mapped;
-
+  char * mapped;
   double value;  
-  char *delim = " "; // input separated by spaces
+  const char *delim = " ";
   char *token = NULL;  
   char *unconverted;
+  int colCnt = 0;
+  int rowCnt = 0;
+  int i;
+  double **matrix;
+
+  mapped = regular_read(file_name);
   
-  mapped = mmap_read_example(file_name);
+  i = 0;
+  while(mapped[i] != '\n'){
+    if(mapped[i] == '.') {
+     colCnt++;
+    }
+    i++;
+  }
+  printf("colCnt: %d\n", colCnt);    
   
+  i = 0;
+  while(i < strlen(mapped)){
+    if(mapped[i] == '\n') {
+     rowCnt++;
+    }
+    i++;
+  } 
+  printf("rowCnt: %d\n", rowCnt);    
+
+
+  /* Malloc Matrix */
+  if (( matrix = (double**)malloc(rowCnt * sizeof(double*))) == NULL ) {
+    printf("malloc issue");
+  }
+  for(i = 0; i < rowCnt; i++) {
+    if (( matrix[i] = (double*)malloc(colCnt * sizeof(double))) == NULL ) {
+      printf("inside malloc issue");
+    }
+  }
+    
+    
   for (token = strtok(mapped, delim); token != NULL; token = strtok(NULL, delim))
   {
     value = strtod(token, &unconverted);
-    printf("%f\n",value);
+    //printf("%.2f\n", value);
   }
+
   return 0;
 }
