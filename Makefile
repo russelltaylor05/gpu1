@@ -15,7 +15,7 @@ clean:
 	rm main *.o
 
 test: clean main
-	@main
+	@./main
 
 
 %.o: %.c
