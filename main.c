@@ -29,6 +29,10 @@ char* regular_read(const char * file_name)
   FILE *fp;
   
   fp = fopen(file_name,"r");
+  if(!fp) {
+    fprintf (stderr, "file no good.\n");
+    exit (EXIT_FAILURE);    
+  }
 
   fseek (fp, 0, SEEK_END);
   size = ftell(fp);
@@ -93,42 +97,58 @@ void buildtable (int **A, int **B, int **C, lenAx, len Ay, len Bx, len By)
 }
 */
 
+/* Print matrix values */
+void print_matrix(double **matrix, int row, int col) 
+{
+
+  int i, j;
+  for(i = 0; i < row; i++) {
+    printf("Row: %d\n",i);
+    for(j = 0; j < col; j++) {
+      printf("%.2f ",matrix[i][j]);
+    }  
+    putchar('\n');
+  }
+}
+
 int main ()
 {
 
   const char * file_name = "test.in";
-  char * mapped;
+  //const char * file_name = "555x666.in";
+  char *mapped;
   double value;  
-  const char *delim = " ";
+  const char *delim_space = " ";
   char *token = NULL;  
   char *unconverted;
   int colCnt = 0;
   int rowCnt = 0;
-  int i;
+  int i, j;
   double **matrix;
 
   mapped = regular_read(file_name);
   
+  /* Determine Col Count */
   i = 0;
   while(mapped[i] != '\n'){
     if(mapped[i] == '.') {
      colCnt++;
     }
     i++;
-  }
-  printf("colCnt: %d\n", colCnt);    
-  
+  }  
+
+  /* Determine Row Count */
   i = 0;
   while(i < strlen(mapped)){
     if(mapped[i] == '\n') {
      rowCnt++;
     }
     i++;
-  } 
-  printf("rowCnt: %d\n", rowCnt);    
+  }
+  rowCnt++;
 
 
-  /* Malloc Matrix */
+  /* Malloc the Matrix */
   if (( matrix = (double**)malloc(rowCnt * sizeof(double*))) == NULL ) {
     printf("malloc issue");
   }
@@ -138,12 +158,29 @@ int main ()
     }
   }
     
-    
-  for (token = strtok(mapped, delim); token != NULL; token = strtok(NULL, delim))
-  {
+  /* Read values into matrix */
+  i = 0; j = 0;
+  for (token = strtok(mapped, delim_space); token != NULL; token = strtok(NULL, delim_space)) {
     value = strtod(token, &unconverted);
-    //printf("%.2f\n", value);
+    matrix[i][j] = value;
+    j++;
+    if(j == colCnt) {
+      j = 0;
+      i++;
+    }
   }
+
+  print_matrix(matrix, rowCnt, colCnt);
+  printf("colCnt: %d\n", colCnt);
+  printf("rowCnt: %d\n", rowCnt);
+
+  /* Free Stuff */
+  for(i = 0; i < rowCnt; i++) {
+    free(matrix[i]);
+  }
+  free(matrix);
+  free(mapped);
+
 
   return 0;
 }
