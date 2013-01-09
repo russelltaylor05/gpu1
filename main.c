@@ -79,23 +79,23 @@ char* mmap_read(const char * file_name)
 }
 
 
-void calc_matrix(int **A, int **B, int **C, lenAx, lenAy, lenBx, lenBy)
-{//LenAx = LenBy
-        int i, j, k, sum = 0;
-        for(i = 0; i < lenBx; i++)
+void calc_matrix(double **A, double **B, double **C, int lenAx, int lenAy, int lenBx, int lenBy)
+{
+  int i, j, k, sum = 0;
+  for(i = 0; i < lenBx; i++)
+  {
+    for(j = 0; j < lenAy; j++)
+    {
+        for(k = 0; k < lenAx; k++)
         {
-                for(j = 0; j < lenAy; j++)
-                {
-                    for(k = 0; k < lenAx; k++)
-                    {
-                        sum+= A[k][j] * A[i][k];
-                    }
-                    C[i][j] = sum;
-                    sum = 0;
-                }
+            sum+= A[k][j] * A[i][k];
         }
+        C[i][j] = sum;
+        sum = 0;
+    }
+  }
 }
-*/
+
 
 /* Print matrix values */
 void print_matrix(double **matrix, int row, int col) 
@@ -103,13 +103,13 @@ void print_matrix(double **matrix, int row, int col)
 
   int i, j;
   for(i = 0; i < row; i++) {
-    printf("Row: %d\n",i);
     for(j = 0; j < col; j++) {
       printf("%.2f ",matrix[i][j]);
     }  
     putchar('\n');
   }
 }
+
 double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
 {
   double value;  
@@ -144,11 +144,11 @@ double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
 
 
   /* Malloc the Matrix */
-  if (( matrix = (double**)malloc((*rowCnt) * sizeof(double*))) == NULL ) {
+  if (( matrix = (double**) malloc((*rowCnt) * sizeof(double*))) == NULL ) {
     printf("malloc issue");
   }
   for(i = 0; i < (*rowCnt); i++) {
-    if (( matrix[i] = (double*)malloc((*colCnt) * sizeof(double))) == NULL ) {
+    if (( matrix[i] = (double*) malloc((*colCnt) * sizeof(double))) == NULL ) {
       printf("inside malloc issue");
     }
   }
@@ -170,11 +170,12 @@ double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
 int main ()
 {
 
-  const char * Afile = "test.in";
+  const char * Afile = "A.in";
   const char * Bfile = "B.in";
   
   double ** Amatrix;
   double ** Bmatrix;
+  double ** Cmatrix;
 
   int Arow, Acol, Brow, Bcol;
   int i;
@@ -186,16 +187,32 @@ int main ()
 
   Amatrix = read_matrix(&Arow, &Acol, Amapped); 
   Bmatrix = read_matrix(&Brow, &Bcol, Bmapped);
-  
+
+  printf("Matrix A:\n");  
+  printf("Col: %d \tRow: %d\n", Acol, Arow);
   print_matrix(Amatrix, Arow, Acol);
-  printf("A colCnt: %d\n", Acol);
-  printf("A rowCnt: %d\n", Arow);
+  putchar('\n');
 
+  printf("Matrix B:\n");
+  printf("Col: %d \tRow: %d\n", Bcol, Brow);
   print_matrix(Bmatrix, Brow, Bcol);
-  printf("B colCnt: %d\n", Bcol);
-  printf("B rowCnt: %d\n", Brow);
+  putchar('\n');
 
+  /* Malloc the Matrix */
+  if (( Cmatrix = (double**)malloc((Arow) * sizeof(double*))) == NULL ) {
+    printf("malloc issue");
+  }
+  for(i = 0; i < Arow; i++) {
+    if (( Cmatrix[i] = (double*)malloc((Bcol) * sizeof(double))) == NULL ) {
+      printf("inside malloc issue");
+    }
+  }
 
+  calc_matrix(Amatrix, Bmatrix, Cmatrix, Arow, Acol, Brow, Bcol);
+
+  printf("Result Matrix:\n");
+  print_matrix(Cmatrix, Brow, Bcol);
+  
   /* Free Stuff */
   for(i = 0; i < Arow; i++) {
     free(Amatrix[i]);
