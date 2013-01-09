@@ -110,29 +110,24 @@ void print_matrix(double **matrix, int row, int col)
     putchar('\n');
   }
 }
-
-int main ()
+double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
 {
-
-  const char * file_name = "test.in";
-  //const char * file_name = "555x666.in";
-  char *mapped;
   double value;  
   const char *delim_space = " ";
   char *token = NULL;  
   char *unconverted;
-  int colCnt = 0;
-  int rowCnt = 0;
   int i, j;
   double **matrix;
 
-  mapped = regular_read(file_name);
+  *colCnt = 0;
+  *rowCnt = 0;
+
   
   /* Determine Col Count */
   i = 0;
   while(mapped[i] != '\n'){
     if(mapped[i] == '.') {
-     colCnt++;
+     (*colCnt)++;
     }
     i++;
   }  
@@ -141,19 +136,19 @@ int main ()
   i = 0;
   while(i < strlen(mapped)){
     if(mapped[i] == '\n') {
-     rowCnt++;
+     (*rowCnt)++;
     }
     i++;
   }
-  rowCnt++;
+  (*rowCnt)++;
 
 
   /* Malloc the Matrix */
-  if (( matrix = (double**)malloc(rowCnt * sizeof(double*))) == NULL ) {
+  if (( matrix = (double**)malloc((*rowCnt) * sizeof(double*))) == NULL ) {
     printf("malloc issue");
   }
-  for(i = 0; i < rowCnt; i++) {
-    if (( matrix[i] = (double*)malloc(colCnt * sizeof(double))) == NULL ) {
+  for(i = 0; i < (*rowCnt); i++) {
+    if (( matrix[i] = (double*)malloc((*colCnt) * sizeof(double))) == NULL ) {
       printf("inside malloc issue");
     }
   }
@@ -164,22 +159,40 @@ int main ()
     value = strtod(token, &unconverted);
     matrix[i][j] = value;
     j++;
-    if(j == colCnt) {
+    if(j == (*colCnt)) {
       j = 0;
       i++;
     }
   }
+  return matrix;
 
-  print_matrix(matrix, rowCnt, colCnt);
-  printf("colCnt: %d\n", colCnt);
-  printf("rowCnt: %d\n", rowCnt);
+}
+int main ()
+{
+
+  const char * Afile = "A.in";
+  const char * Bfile = "B.in";
+  
+  double ** Amatrix;
+  //double ** Bmatrix;
+
+  int Arow, Acol;//, Bx, By;
+  int i;
+
+  char * Amapped;//, * Bmapped;
+  Amapped = regular_read(Afile);
+  Amatrix = read_matrix(&Arow, &Acol, Amapped); 
+  //Bmatrix = read_matrix(&Bx, &By, regular_read(Bfile));
+  print_matrix(Amatrix, Arow, Acol);
+  printf("colCnt: %d\n", Acol);
+  printf("rowCnt: %d\n", Arow);
 
   /* Free Stuff */
-  for(i = 0; i < rowCnt; i++) {
-    free(matrix[i]);
+  for(i = 0; i < Arow; i++) {
+    free(Amatrix[i]);
   }
-  free(matrix);
-  free(mapped);
+  free(Amatrix);
+  //free(Amapped);
 
 
   return 0;
