@@ -73,7 +73,22 @@ char* mmap_read(const char * file_name)
   
   return mapped;
 }
-
+void buildtable (int **A, int **B, int **C, lenAx, len Ay, len Bx, len By)
+{//LenAx = LenBy
+        int i, j, k, sum = 0;
+        for(i = 0; i < lenBx; i++)
+        {
+                for(j = 0; j < lenAy; j++)
+                {
+                    for(k = 0; k < lenAx; k++)
+                    {
+                        sum+= A[k][j] * A[i][k];
+                    }
+                    C[i][j] = sum;
+                    sum = 0;
+                }
+        }
+}
 int main ()
 {
 
