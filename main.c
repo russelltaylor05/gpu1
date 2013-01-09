@@ -78,8 +78,8 @@ char* mmap_read(const char * file_name)
   return mapped;
 }
 
-/*
-void buildtable (int **A, int **B, int **C, lenAx, len Ay, len Bx, len By)
+
+void calc_matrix(int **A, int **B, int **C, lenAx, lenAy, lenBx, lenBy)
 {//LenAx = LenBy
         int i, j, k, sum = 0;
         for(i = 0; i < lenBx; i++)
@@ -194,6 +194,7 @@ int main ()
   print_matrix(Bmatrix, Brow, Bcol);
   printf("B colCnt: %d\n", Bcol);
   printf("B rowCnt: %d\n", Brow);
+
 
   /* Free Stuff */
   for(i = 0; i < Arow; i++) {
