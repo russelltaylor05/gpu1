@@ -170,30 +170,43 @@ double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
 int main ()
 {
 
-  const char * Afile = "A.in";
+  const char * Afile = "test.in";
   const char * Bfile = "B.in";
   
   double ** Amatrix;
-  //double ** Bmatrix;
+  double ** Bmatrix;
 
-  int Arow, Acol;//, Bx, By;
+  int Arow, Acol, Brow, Bcol;
   int i;
 
-  char * Amapped;//, * Bmapped;
+  char * Amapped, * Bmapped;
+
   Amapped = regular_read(Afile);
+  Bmapped = regular_read(Bfile);
+
   Amatrix = read_matrix(&Arow, &Acol, Amapped); 
-  //Bmatrix = read_matrix(&Bx, &By, regular_read(Bfile));
+  Bmatrix = read_matrix(&Brow, &Bcol, Bmapped);
+  
   print_matrix(Amatrix, Arow, Acol);
-  printf("colCnt: %d\n", Acol);
-  printf("rowCnt: %d\n", Arow);
+  printf("A colCnt: %d\n", Acol);
+  printf("A rowCnt: %d\n", Arow);
+
+  print_matrix(Bmatrix, Brow, Bcol);
+  printf("B colCnt: %d\n", Bcol);
+  printf("B rowCnt: %d\n", Brow);
 
   /* Free Stuff */
   for(i = 0; i < Arow; i++) {
     free(Amatrix[i]);
   }
   free(Amatrix);
-  //free(Amapped);
+  free(Amapped);
 
-
+  for(i = 0; i < Brow; i++) {
+    free(Bmatrix[i]);
+  }
+  free(Bmatrix);
+  free(Bmapped);
   return 0;
+
 }
