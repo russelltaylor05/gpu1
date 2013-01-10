@@ -12,14 +12,14 @@
 static void
 check (int test, const char * message, ...)
 {
-    if (test) {
-        va_list args;
-        va_start (args, message);
-        vfprintf (stderr, message, args);
-        va_end (args);
-        fprintf (stderr, "\n");
-        exit (EXIT_FAILURE);
-    }
+  if (test) {
+    va_list args;
+    va_start (args, message);
+    vfprintf (stderr, message, args);
+    va_end (args);
+    fprintf (stderr, "\n");
+    exit (EXIT_FAILURE);
+  }
 }
 
 char* regular_read(const char * file_name) 
@@ -80,18 +80,16 @@ char* mmap_read(const char * file_name)
 
 
 void calc_matrix(double **A, double **B, double **C, int Arow, int Acol, int Brow, int Bcol)
-{//Arow = Bcol
+{
+  /* Arow = Bcol */
   int i, j, k, sum = 0;
-  for(i = 0; i < Bcol; i++)
-  {
-    for(j = 0; j < Arow; j++)
-    {
-        for(k = 0; k < Acol; k++)
-        {
-            sum+= A[j][k] * B[k][i];
-        }
-        C[j][i] = sum;
-        sum = 0;
+  for(i = 0; i < Bcol; i++) {
+    for(j = 0; j < Arow; j++) {
+      for(k = 0; k < Acol; k++) {
+        sum+= A[j][k] * B[k][i];
+      }
+      C[j][i] = sum;
+      sum = 0;
     }
   }
 }
@@ -126,7 +124,7 @@ double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
   /* Determine Col Count */
   i = 0;
   while(mapped[i] != '\n'){
-    if(mapped[i] == '.') {
+    if(mapped[i] == ' ') {
      (*colCnt)++;
     }
     i++;
@@ -135,13 +133,12 @@ double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
   /* Determine Row Count */
   i = 0;
   while(i < strlen(mapped)){
-    if(mapped[i] == '\n') {
+    if((mapped[i] == '\n') && (mapped[i+1] != '\0') ) {
      (*rowCnt)++;
     }
     i++;
   }
   (*rowCnt)++;
-
 
   /* Malloc the Matrix */
   if (( matrix = (double**) malloc((*rowCnt) * sizeof(double*))) == NULL ) {
@@ -149,20 +146,23 @@ double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
   }
   for(i = 0; i < (*rowCnt); i++) {
     if (( matrix[i] = (double*) malloc((*colCnt) * sizeof(double))) == NULL ) {
-      printf("inside malloc issue");
+      printf("inside malloc issue");      
     }
   }
     
   /* Read values into matrix */
-  i = 0; j = 0;
+  i = 0; 
+  j = 0;
   for (token = strtok(mapped, delim_space); token != NULL; token = strtok(NULL, delim_space)) {
     value = strtod(token, &unconverted);
-    matrix[i][j] = value;
-    j++;
-    if(j == (*colCnt)) {
-      j = 0;
-      i++;
-    }
+    if(*(token + 1) != '\0'){
+      matrix[i][j] = value;
+      j++;
+      if(j == (*colCnt)) {
+        j = 0;
+        i++;
+      }
+    }    
   }
   return matrix;
 
