@@ -79,18 +79,18 @@ char* mmap_read(const char * file_name)
 }
 
 
-void calc_matrix(double **A, double **B, double **C, int lenAx, int lenAy, int lenBx, int lenBy)
-{
+void calc_matrix(double **A, double **B, double **C, int Arow, int Acol, int Brow, int Bcol)
+{//Arow = Bcol
   int i, j, k, sum = 0;
-  for(i = 0; i < lenBx; i++)
+  for(i = 0; i < Bcol; i++)
   {
-    for(j = 0; j < lenAy; j++)
+    for(j = 0; j < Arow; j++)
     {
-        for(k = 0; k < lenAx; k++)
+        for(k = 0; k < Acol; k++)
         {
-            sum+= A[k][j] * A[i][k];
+            sum+= A[j][k] * B[k][i];
         }
-        C[i][j] = sum;
+        C[j][i] = sum;
         sum = 0;
     }
   }
@@ -211,7 +211,7 @@ int main ()
   calc_matrix(Amatrix, Bmatrix, Cmatrix, Arow, Acol, Brow, Bcol);
 
   printf("Result Matrix:\n");
-  print_matrix(Cmatrix, Brow, Bcol);
+  print_matrix(Cmatrix, Arow, Bcol);
   
   /* Free Stuff */
   for(i = 0; i < Arow; i++) {
