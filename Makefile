@@ -2,20 +2,25 @@
 # General definitions
 
 CPP = gcc
-CPPFLAGS = -Wall -O3 -g
-
+CPPFLAGS = -Wall -g #-O3 -g
 MAIN = main.o
 
 default: main
      
 main: $(MAIN) 
-	$(CPP) $(MAIN) -o main
+	$(CPP) $(MAIN) -o mm_cpu
+
+double: 
+	$(CPP) $(CPPFLAGS) -DDOUBLE -o mm_cpu main.c  
+
+single: 
+	$(CPP) $(CPPFLAGS) -DSINGLE -o mm_cpu main.c
 
 clean: 
-	rm main *.o
+	rm mm_cpu *.o
 
 test: clean main
-	@./main
+	@./mm_cpu
 
 
 %.o: %.c

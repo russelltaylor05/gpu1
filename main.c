@@ -1,3 +1,9 @@
+/*
+ * Russell Taylor(rtaylor)
+ * Matt Crusse(macrusse)
+ * CPE458-01 Lab 1 Winter 2013 
+ */
+
 #include <sys/stat.h>
 #include <sys/mman.h> 
 #include <errno.h>
@@ -9,20 +15,18 @@
 #include <ctype.h>
 
 
-static void
-check (int test, const char * message, ...)
-{
-  if (test) {
-    va_list args;
-    va_start (args, message);
-    vfprintf (stderr, message, args);
-    va_end (args);
-    fprintf (stderr, "\n");
-    exit (EXIT_FAILURE);
-  }
-}
+/*Compile-Time Declaration on double or float usage*/
+#ifdef DOUBLE
+#define TYPEUSE double
 
-char* regular_read(const char * file_name) 
+#else
+#define TYPEUSE float
+
+#endif
+
+
+/*Reads Input File and Returns Buffer of Contents*/
+char* read_file(const char * file_name) 
 {
   size_t size;
   char *buffer;
@@ -30,7 +34,7 @@ char* regular_read(const char * file_name)
   
   fp = fopen(file_name,"r");
   if(!fp) {
-    fprintf (stderr, "file no good.\n");
+    fprintf (stderr, "Error opening input file.\n");
     exit (EXIT_FAILURE);    
   }
 
@@ -40,83 +44,82 @@ char* regular_read(const char * file_name)
   
   buffer = (char*) malloc (sizeof(char)*size);
   fread (buffer, 1, size, fp);
-
+  fclose(fp);
   return buffer;
 }
 
-
-/* Does not work because returned string is not null terminated */
-char* mmap_read(const char * file_name) 
+/*Calculate the Resultant Matrix from Multiplication*/
+void calc_matrix(TYPEUSE **A, TYPEUSE **B, TYPEUSE **C, int Arow, int Acol, int Brow, int Bcol)
 {
-  int fd;
-  struct stat s;
-  int status;
-  size_t size;
-  char * mapped;
-
-  /* Open the file for reading. */
-  fd = open (file_name, O_RDONLY);
-  check (fd < 0, "open %s failed: %s", file_name, strerror (errno));
-  
-  /* Get the size of the file. */
-  status = fstat (fd, & s);
-  check (status < 0, "stat %s failed: %s", file_name, strerror (errno));
-  size = s.st_size;    
-  
-  /* Memory-map the file. */
-  mapped = mmap (0, size, PROT_READ, MAP_SHARED, fd, 0);
-  check (mapped == MAP_FAILED, "mmap %s failed: %s", file_name, strerror (errno));
-  
-  /* Now do something with the information. */
-  /*
-  for (i = 0; i < size; i++) {
-      putchar (mapped[i]);
-  }
-  putchar('\n');
-  */  
-  
-  return mapped;
-}
-
-
-void calc_matrix(double **A, double **B, double **C, int Arow, int Acol, int Brow, int Bcol)
-{
-  /* Arow = Bcol */
-  int i, j, k, sum = 0;
-  for(i = 0; i < Bcol; i++) {
-    for(j = 0; j < Arow; j++) {
-      for(k = 0; k < Acol; k++) {
-        sum+= A[j][k] * B[k][i];
-      }
-      C[j][i] = sum;
-      sum = 0;
+  int i, j, k;
+  TYPEUSE sum = 0;
+  for(i = 0; i < Arow; i++)//Iterate through Matrix B columnwise
+  {
+    for(j = 0; j < Bcol; j++)//Iterate through Matrix A rowwise
+    {
+        for(k = 0; k < Acol; k++)//Acol = Brow on valid Matrices
+        {
+            sum+= A[i][k] * B[k][j];
+        }
+        C[i][j] = sum;
+        sum = 0;
     }
   }
 }
 
-
-/* Print matrix values */
-void print_matrix(double **matrix, int row, int col) 
+/* Print matrix values to a file outputfile */
+void output_matrix(const char * outputfile, TYPEUSE **matrix, int row, int col) 
 {
-
   int i, j;
+
+  FILE *ofp = fopen(outputfile, "w");
+  if(!ofp){
+    fprintf (stderr, "Error opening output file.\n");
+    exit (EXIT_FAILURE);    
+  }
+
+  for(i = 0; i < row; i++) {
+    for(j = 0; j < col; j++) {
+      fprintf(ofp, "%.2f ",matrix[i][j]);
+    }  
+    if(i < row-1){
+      fprintf(ofp, "\n");
+    }
+  }
+  fclose(ofp);
+}
+
+void print_matrix(const char * outputfile, TYPEUSE **matrix, int row, int col) 
+{
+  int i, j;
+
+  /*FILE *ofp = fopen(outputfile, "w");
+  if(!ofp){
+    fprintf (stderr, "Error opening output file.\n");
+    exit (EXIT_FAILURE);    
+  }*/
+
   for(i = 0; i < row; i++) {
     for(j = 0; j < col; j++) {
       printf("%.2f ",matrix[i][j]);
     }  
-    putchar('\n');
+    if(i < row-1){
+      printf("\n");
+    }
   }
+  //fclose(ofp);
 }
 
-double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
+/*Created a Matrix based on Buffered Input Information*/
+TYPEUSE ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
 {
-  double value;  
+  TYPEUSE value;  
   const char *delim_space = " ";
   char *token = NULL;  
   char *unconverted;
-  int i, j;
-  double **matrix;
-
+  int i, j, len;
+  TYPEUSE **matrix;
+  long bigiter;
   *colCnt = 0;
   *rowCnt = 0;
 
@@ -124,107 +127,109 @@ double ** read_matrix(int * rowCnt, int * colCnt, char * mapped)
   /* Determine Col Count */
   i = 0;
   while(mapped[i] != '\n'){
-    if(mapped[i] == ' ') {
+    if(mapped[i] == '.') {
      (*colCnt)++;
     }
     i++;
   }  
 
   /* Determine Row Count */
-  i = 0;
-  while(i < strlen(mapped)){
-    if((mapped[i] == '\n') && (mapped[i+1] != '\0') ) {
+  bigiter = 0;//For large file sizes, an int is too small to iterate through
+  len = strlen(mapped);
+  while(bigiter < len && mapped[bigiter] != '\0'){
+    if((mapped[bigiter] == '\n') && (mapped[bigiter+1] != '\0') ) {
      (*rowCnt)++;
     }
-    i++;
+    bigiter+=1;
   }
   (*rowCnt)++;
 
   /* Malloc the Matrix */
-  if (( matrix = (double**) malloc((*rowCnt) * sizeof(double*))) == NULL ) {
+  if (( matrix = (TYPEUSE**) malloc((*rowCnt) * sizeof(TYPEUSE*))) == NULL ) {
     printf("malloc issue");
   }
   for(i = 0; i < (*rowCnt); i++) {
-    if (( matrix[i] = (double*) malloc((*colCnt) * sizeof(double))) == NULL ) {
-      printf("inside malloc issue");      
+    if (( matrix[i] = (TYPEUSE*) malloc((*colCnt) * sizeof(TYPEUSE))) == NULL ) {
+      printf("inside malloc issue");
     }
   }
     
   /* Read values into matrix */
-  i = 0; 
-  j = 0;
+  i = 0; j = 0;
   for (token = strtok(mapped, delim_space); token != NULL; token = strtok(NULL, delim_space)) {
     value = strtod(token, &unconverted);
-    if(*(token + 1) != '\0'){
-      matrix[i][j] = value;
-      j++;
-      if(j == (*colCnt)) {
-        j = 0;
-        i++;
-      }
-    }    
+    matrix[i][j] = value;
+    j++;
+    if(j == (*colCnt)) {
+      j = 0;
+      if(++i == (*rowCnt))
+	break;
+    }
   }
   return matrix;
 
 }
-int main ()
+/*Frees 2D Matrices*/
+void free_matrix(TYPEUSE ** matrix, int row)
+{
+  int i;
+
+  for(i = 0; i < row; i++) 
+  {
+    free(matrix[i]);
+  }
+  
+  free(matrix);
+}
+int main (int argc, const char * argv[])
 {
 
-  const char * Afile = "A.in";
-  const char * Bfile = "B.in";
-  
-  double ** Amatrix;
-  double ** Bmatrix;
-  double ** Cmatrix;
+  const char * Cfile = "result.out";
+  TYPEUSE ** Amatrix, ** Bmatrix, ** Cmatrix;
 
   int Arow, Acol, Brow, Bcol;
   int i;
 
   char * Amapped, * Bmapped;
 
-  Amapped = regular_read(Afile);
-  Bmapped = regular_read(Bfile);
+  if(argc != 3)
+  { 
+    fprintf(stderr, "Usage: [Matrix A] [Matrix B]\n");
+    exit(EXIT_FAILURE);
+  }
+
+  Amapped = read_file(argv[1]);
+  Bmapped = read_file(argv[2]);
 
   Amatrix = read_matrix(&Arow, &Acol, Amapped); 
   Bmatrix = read_matrix(&Brow, &Bcol, Bmapped);
-
-  printf("Matrix A:\n");  
-  printf("Col: %d \tRow: %d\n", Acol, Arow);
-  print_matrix(Amatrix, Arow, Acol);
-  putchar('\n');
-
-  printf("Matrix B:\n");
-  printf("Col: %d \tRow: %d\n", Bcol, Brow);
-  print_matrix(Bmatrix, Brow, Bcol);
-  putchar('\n');
-
-  /* Malloc the Matrix */
-  if (( Cmatrix = (double**)malloc((Arow) * sizeof(double*))) == NULL ) {
+  
+  if(Acol != Brow)
+  {
+    fprintf(stderr, "Matrices are not a compatible size to be multipliedi\n");
+    exit(EXIT_FAILURE);
+  }
+  
+  /* Malloc a New Matrix */
+  if (( Cmatrix = (TYPEUSE**)malloc((Arow) * sizeof(TYPEUSE*))) == NULL ) {
     printf("malloc issue");
   }
   for(i = 0; i < Arow; i++) {
-    if (( Cmatrix[i] = (double*)malloc((Bcol) * sizeof(double))) == NULL ) {
+    if (( Cmatrix[i] = (TYPEUSE*)malloc((Bcol) * sizeof(TYPEUSE))) == NULL ) {
       printf("inside malloc issue");
     }
   }
 
   calc_matrix(Amatrix, Bmatrix, Cmatrix, Arow, Acol, Brow, Bcol);
 
-  printf("Result Matrix:\n");
-  print_matrix(Cmatrix, Arow, Bcol);
+  output_matrix(Cfile, Cmatrix, Arow, Bcol);
   
   /* Free Stuff */
-  for(i = 0; i < Arow; i++) {
-    free(Amatrix[i]);
-  }
-  free(Amatrix);
+  free_matrix(Amatrix, Arow);
+  free_matrix(Bmatrix, Brow);
+  free_matrix(Cmatrix, Arow);
   free(Amapped);
-
-  for(i = 0; i < Brow; i++) {
-    free(Bmatrix[i]);
-  }
-  free(Bmatrix);
   free(Bmapped);
-  return 0;
 
+  return 0;
 }
