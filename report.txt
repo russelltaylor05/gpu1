@@ -12,13 +12,13 @@ Single Precision:
 	Test 1		Test 2		Test 3
 real	0m2.603s	0m2.847s	0m2.997s
 user	0m2.534s	0m2.682s	0m2.718s
-sys	0m0.015s	0m0.027s	0m0.023s
+syst	0m0.015s	0m0.027s	0m0.023s
 
 Double Precision:
 	Test 1		Test 2		Test 3
 real	0m3.655s	0m3.577s	0m3.598s
 user	0m3.383s	0m3.433s	0m3.411s
-sys	0m0.037s	0m0.030s	0m0.030s
+syst	0m0.037s	0m0.030s	0m0.030s
 
 
 
